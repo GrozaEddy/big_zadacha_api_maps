@@ -6,7 +6,7 @@ from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel
 from PyQt5.QtCore import Qt
 
-SCREEN_SIZE = [600, 450]
+SCREEN_SIZE = [600, 600]
 
 
 class Example(QWidget):
@@ -40,7 +40,7 @@ class Example(QWidget):
         self.pixmap = QPixmap(self.map_file)
         self.image = QLabel(self)
         self.image.move(0, 0)
-        self.image.resize(600, 450)
+        self.image.resize(600, 600)
         self.image.setPixmap(self.pixmap)
 
     def closeEvent(self, event):
@@ -52,14 +52,14 @@ class Example(QWidget):
         elif event.key() == Qt.Key_PageDown and float(self.map_delta) > 0.002:
             self.map_delta = str(float(self.map_delta) - 0.002)
         elif event.key() == Qt.Key_Up:
-            self.map_y += float(self.map_delta) * 450
+            self.map_y += float(self.map_delta)
             print(self.map_y)
         elif event.key() == Qt.Key_Down:
-            self.map_y -= float(self.map_delta) * 450
+            self.map_y -= float(self.map_delta)
         elif event.key() == Qt.Key_Left:
-            self.map_x -= float(self.map_delta) * 600
+            self.map_x -= float(self.map_delta)
         elif event.key() == Qt.Key_Right:
-            self.map_x += float(self.map_delta) * 600
+            self.map_x += float(self.map_delta)
         self.params['ll'] = ','.join([str(self.map_x), str(self.map_y)])
         self.params['spn'] = ','.join([self.map_delta, self.map_delta])
         response = requests.get(self.map_request, params=self.params)
