@@ -1,12 +1,12 @@
 import os
-import sys
+from sys import argv
 
 import requests
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel
-from PyQt5.QtCore import Qt
 
-SCREEN_SIZE = [600, 600]
+SCREEN_SIZE = [600, 450]
 
 
 class Example(QWidget):
@@ -25,11 +25,6 @@ class Example(QWidget):
                        'l': self.map_type
                        }
         response = requests.get(self.map_request, params=self.params)
-        if not response:
-            print("Ошибка выполнения запроса:")
-            print(self.map_request)
-            print("Http статус:", response.status_code, "(", response.reason, ")")
-            sys.exit(1)
         self.map_file = "map.png"
         with open(self.map_file, "wb") as file:
             file.write(response.content)
@@ -38,22 +33,18 @@ class Example(QWidget):
         self.setGeometry(100, 100, *SCREEN_SIZE)
         self.setWindowTitle('Отображение карты')
         self.pixmap = QPixmap(self.map_file)
+        os.remove(self.map_file)
         self.image = QLabel(self)
         self.image.move(0, 0)
-        self.image.resize(600, 600)
         self.image.setPixmap(self.pixmap)
 
-    def closeEvent(self, event):
-        os.remove(self.map_file)
-
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_PageUp:
-            self.map_delta = str(float(self.map_delta) + 0.002)
-        elif event.key() == Qt.Key_PageDown and float(self.map_delta) > 0.002:
-            self.map_delta = str(float(self.map_delta) - 0.002)
+        if event.key() == Qt.Key_PageUp and float(self.map_delta) < 0.01:
+            self.map_delta = str(float(self.map_delta) + 0.001)
+        elif event.key() == Qt.Key_PageDown and float(self.map_delta) > 0.001:
+            self.map_delta = str(float(self.map_delta) - 0.001)
         elif event.key() == Qt.Key_Up:
             self.map_y += float(self.map_delta)
-            print(self.map_y)
         elif event.key() == Qt.Key_Down:
             self.map_y -= float(self.map_delta)
         elif event.key() == Qt.Key_Left:
@@ -63,21 +54,15 @@ class Example(QWidget):
         self.params['ll'] = ','.join([str(self.map_x), str(self.map_y)])
         self.params['spn'] = ','.join([self.map_delta, self.map_delta])
         response = requests.get(self.map_request, params=self.params)
-        if not response:
-            print("Ошибка выполнения запроса:")
-            print(self.map_request)
-            print("Http статус:", response.status_code, "(", response.reason, ")")
-            sys.exit(1)
-        os.remove(self.map_file)
-        self.map_file = "map.png"
         with open(self.map_file, "wb") as file:
             file.write(response.content)
         self.pixmap = QPixmap(self.map_file)
+        os.remove(self.map_file)
         self.image.setPixmap(self.pixmap)
 
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
+    app = QApplication(argv)
     ex = Example()
     ex.show()
-    sys.exit(app.exec())
+    exit(app.exec())
