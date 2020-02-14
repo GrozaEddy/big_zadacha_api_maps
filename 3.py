@@ -17,17 +17,17 @@ class Example(QWidget):
 
     def getImage(self):
         self.map_request = "http://static-maps.yandex.ru/1.x/"
-        self.map_x, self.map_y = '37.530887', '55.703118'
+        self.map_x, self.map_y = 37.530887, 55.703118
         self.map_delta = '0.002'
         self.map_type = 'map'
-        self.params = {'ll': ','.join([self.map_x, self.map_y]),
+        self.params = {'ll': ','.join([str(self.map_x), str(self.map_y)]),
                        'spn': ','.join([self.map_delta, self.map_delta]),
                        'l': self.map_type
                        }
         response = requests.get(self.map_request, params=self.params)
         if not response:
             print("Ошибка выполнения запроса:")
-            print(map_request)
+            print(self.map_request)
             print("Http статус:", response.status_code, "(", response.reason, ")")
             sys.exit(1)
         self.map_file = "map.png"
@@ -51,11 +51,21 @@ class Example(QWidget):
             self.map_delta = str(float(self.map_delta) + 0.002)
         elif event.key() == Qt.Key_PageDown and float(self.map_delta) > 0.002:
             self.map_delta = str(float(self.map_delta) - 0.002)
+        elif event.key() == Qt.Key_Up:
+            self.map_y += float(self.map_delta) * 450
+            print(self.map_y)
+        elif event.key() == Qt.Key_Down:
+            self.map_y -= float(self.map_delta) * 450
+        elif event.key() == Qt.Key_Left:
+            self.map_x -= float(self.map_delta) * 600
+        elif event.key() == Qt.Key_Right:
+            self.map_x += float(self.map_delta) * 600
+        self.params['ll'] = ','.join([str(self.map_x), str(self.map_y)])
         self.params['spn'] = ','.join([self.map_delta, self.map_delta])
         response = requests.get(self.map_request, params=self.params)
         if not response:
             print("Ошибка выполнения запроса:")
-            print(map_request)
+            print(self.map_request)
             print("Http статус:", response.status_code, "(", response.reason, ")")
             sys.exit(1)
         os.remove(self.map_file)
