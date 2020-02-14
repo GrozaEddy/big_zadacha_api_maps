@@ -12,10 +12,6 @@ SCREEN_SIZE = [600, 450]
 class Example(QWidget):
     def __init__(self):
         super().__init__()
-        self.getImage()
-        self.initUI()
-
-    def getImage(self):
         self.map_request = "http://static-maps.yandex.ru/1.x/"
         self.map_x, self.map_y = 37.530887, 55.703118
         self.map_delta = '0.002'
@@ -24,17 +20,18 @@ class Example(QWidget):
                        'spn': ','.join([self.map_delta, self.map_delta]),
                        'l': self.map_type
                        }
-        response = requests.get(self.map_request, params=self.params)
         self.map_file = "map.png"
+        self.image = QLabel(self)
+        response = requests.get(self.map_request, params=self.params)
         with open(self.map_file, "wb") as file:
             file.write(response.content)
+        self.pixmap = QPixmap(self.map_file)
+        os.remove(self.map_file)
+        self.initUI()
 
     def initUI(self):
         self.setGeometry(100, 100, *SCREEN_SIZE)
         self.setWindowTitle('Отображение карты')
-        self.pixmap = QPixmap(self.map_file)
-        os.remove(self.map_file)
-        self.image = QLabel(self)
         self.image.move(0, 0)
         self.image.setPixmap(self.pixmap)
 
