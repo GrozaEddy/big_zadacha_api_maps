@@ -20,13 +20,14 @@ class Example(QWidget):
                        'spn': ','.join([self.map_delta, self.map_delta]),
                        'l': self.map_type
                        }
-        self.map_file = "map.png"
+        self.map_file = "map."
+        self.format = 'png'
         self.image = QLabel(self)
         response = requests.get(self.map_request, params=self.params)
-        with open(self.map_file, "wb") as file:
+        with open(self.map_file + self.format, "wb") as file:
             file.write(response.content)
-        self.pixmap = QPixmap(self.map_file)
-        os.remove(self.map_file)
+        self.pixmap = QPixmap(self.map_file + self.format)
+        os.remove(self.map_file + self.format)
         self.initUI()
 
     def initUI(self):
@@ -48,6 +49,16 @@ class Example(QWidget):
             self.map_x -= float(self.map_delta)
         elif event.key() == Qt.Key_Right:
             self.map_x += float(self.map_delta)
+        elif event.key() == Qt.Key_1:
+            self.map_type = 'map'
+            self.format = 'png'
+        elif event.key() == Qt.Key_2:
+            self.map_type = 'sat'
+            self.format = 'jpg'
+        elif event.key() == Qt.Key_3:
+            self.map_type = 'skl'
+            self.format = 'png'
+        self.params['l'] = self.map_type
         self.params['ll'] = ','.join([str(self.map_x), str(self.map_y)])
         self.params['spn'] = ','.join([self.map_delta, self.map_delta])
         response = requests.get(self.map_request, params=self.params)
