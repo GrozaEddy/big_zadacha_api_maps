@@ -4,9 +4,9 @@ from sys import argv
 import requests
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton
 
-SCREEN_SIZE = [600, 450]
+SCREEN_SIZE = [600, 500]
 
 
 class Example(QWidget):
@@ -23,6 +23,8 @@ class Example(QWidget):
         self.map_file = "map."
         self.format = 'png'
         self.image = QLabel(self)
+        self.text = QLineEdit(self)
+        self.button = QPushButton('Искать', self)
         response = requests.get(self.map_request, params=self.params)
         with open(self.map_file + self.format, "wb") as file:
             file.write(response.content)
@@ -35,6 +37,30 @@ class Example(QWidget):
         self.setWindowTitle('Отображение карты')
         self.image.move(0, 0)
         self.image.setPixmap(self.pixmap)
+        self.text.move(50, 460)
+        self.text.resize(350, 30)
+        self.button.move(450, 460)
+        self.button.resize(100, 30)
+        self.button.clicked.connect(self.find)
+
+    def find(self):
+        params = {'apikey': '40d1649f-0493-4b70-98ba-98533de7710b',
+                  'geocode': self.text.text(),
+                  'format': 'json'
+                  }
+        try:
+            response = requests.get("http://geocode-maps.yandex.ru/1.x/", params=params).json()
+            self.map_x, self.map_y = response["response"]["GeoObjectCollection"][
+                "featureMember"][0]["GeoObject"]["Point"]["pos"].split()
+            self.params['ll'] = ','.join([str(self.map_x), str(self.map_y)])
+            response = requests.get(self.map_request, params=self.params)
+            with open(self.map_file, "wb") as file:
+                file.write(response.content)
+            self.pixmap = QPixmap(self.map_file)
+            os.remove(self.map_file)
+            self.image.setPixmap(self.pixmap)
+        except Exception:
+            self.text.setText('Некорректный адрес')
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_PageUp and float(self.map_delta) < 0.01:
