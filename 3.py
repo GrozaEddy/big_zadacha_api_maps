@@ -6,7 +6,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton
 
-SCREEN_SIZE = [600, 500]
+SCREEN_SIZE = [600, 600]
 
 
 class Example(QWidget):
@@ -24,6 +24,7 @@ class Example(QWidget):
         self.format = 'png'
         self.image = QLabel(self)
         self.text = QLineEdit(self)
+        self.address_1 = QLabel(self)
         self.button_seek = QPushButton('Искать', self)
         self.button_search = QPushButton('Поиск', self)
         self.button_sbros = QPushButton('Сброс', self)
@@ -52,6 +53,8 @@ class Example(QWidget):
         self.button_sbros.move(360, 460)
         self.button_sbros.resize(100, 30)
         self.button_sbros.clicked.connect(self.sbros)
+        self.address_1.move(50, 530)
+        self.address_1.resize(500, 60)
         self.image.setFocus()
 
     def sbros(self):
@@ -69,6 +72,8 @@ class Example(QWidget):
             file.write(response.content)
         self.pixmap = QPixmap(self.map_file + self.format)
         os.remove(self.map_file + self.format)
+        self.address_1.setText('')
+        self.text.setText('')
         self.initUI()
 
     def search(self):
@@ -89,6 +94,10 @@ class Example(QWidget):
                 "featureMember"][0]["GeoObject"]["Point"]["pos"].split())
             self.params['ll'] = ','.join([str(self.map_x), str(self.map_y)])
             self.params['pt'] = ','.join([str(self.map_x), str(self.map_y), 'flag'])
+            self.address_1.setText(response["response"]["GeoObjectCollection"][
+                                       "featureMember"][0]["GeoObject"]["metaDataProperty"][
+                                       "GeocoderMetaData"]["text"])
+
             response = requests.get(self.map_request, params=self.params)
             with open(self.map_file, "wb") as file:
                 file.write(response.content)
