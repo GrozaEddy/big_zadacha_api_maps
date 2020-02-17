@@ -6,7 +6,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap, QFont
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QCheckBox
 
-SCREEN_SIZE = [600, 580]
+SCREEN_SIZE = [700, 580]
 
 
 class Example(QWidget):
@@ -23,6 +23,9 @@ class Example(QWidget):
         self.map_file = "map."
         self.format = 'png'
         self.image = QLabel(self)
+        self.help = QLabel(self)
+        self.help.move(610, 20)
+        self.help.setText('1 - map\n2 - sat\n3 - skl')
         self.text = QLineEdit(self)
         self.address = QLabel(self)
         self.button_seek = QPushButton('Искать', self)
@@ -59,6 +62,7 @@ class Example(QWidget):
         self.button_reset.clicked.connect(self.reset)
         self.address.move(50, 500)
         self.address.resize(500, 50)
+        self.address.setWordWrap(True)
         font = QFont()
         font.setPointSize(10)
         self.address.setFont(font)
@@ -112,14 +116,14 @@ class Example(QWidget):
             self.params['pt'] = ','.join([str(self.map_x), str(self.map_y), 'flag'])
             self.address.setText(self.geocode["metaDataProperty"]["GeocoderMetaData"]["text"])
             if self.index.checkState():
-                self.address.setText(self.address.text() + ' | ' + self.geocode["metaDataProperty"][
+                self.address.setText(self.address.text() + '|' + self.geocode["metaDataProperty"][
                     "GeocoderMetaData"]["Address"]["postal_code"])
-            response = requests.get(self.map_request, params=self.params)
-            with open(self.map_file, "wb") as file:
-                file.write(response.content)
-            self.pixmap = QPixmap(self.map_file)
-            os.remove(self.map_file)
-            self.image.setPixmap(self.pixmap)
+                response = requests.get(self.map_request, params=self.params)
+                with open(self.map_file, "wb") as file:
+                    file.write(response.content)
+                self.pixmap = QPixmap(self.map_file)
+                os.remove(self.map_file)
+                self.image.setPixmap(self.pixmap)
         except Exception:
             pass
         self.text.clear()
@@ -161,6 +165,22 @@ class Example(QWidget):
         self.pixmap = QPixmap(self.map_file)
         os.remove(self.map_file)
         self.image.setPixmap(self.pixmap)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.map_x -= (float(self.map_delta) ** 2 * (300 - event.x()))
+            self.map_y += (float(self.map_delta) ** 2 * (300 - event.y()))
+            self.params = {'ll': ','.join([str(self.map_x), str(self.map_y)]),
+                           'spn': ','.join([self.map_delta, self.map_delta]),
+                           'l': self.map_type}
+            self.params['ll'] = ','.join([str(self.map_x), str(self.map_y)])
+            self.params['pt'] = ','.join([str(self.map_x), str(self.map_y), 'flag'])
+            response = requests.get(self.map_request, params=self.params)
+            with open(self.map_file + self.format, "wb") as file:
+                file.write(response.content)
+            self.pixmap = QPixmap(self.map_file + self.format)
+            os.remove(self.map_file + self.format)
+            self.initUI()
 
 
 if __name__ == '__main__':
