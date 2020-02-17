@@ -46,6 +46,7 @@ class Example(QWidget):
         self.text.hide()
         self.index.move(270, 460)
         self.index.resize(100, 30)
+        self.index.stateChanged.connect(self.add_index)
         self.button_seek.move(450, 460)
         self.button_seek.resize(100, 30)
         self.button_seek.clicked.connect(self.seek)
@@ -61,6 +62,16 @@ class Example(QWidget):
         font = QFont()
         font.setPointSize(10)
         self.address.setFont(font)
+        self.image.setFocus()
+
+    def add_index(self, state):
+        try:
+            self.address.setText(self.geocode["metaDataProperty"]["GeocoderMetaData"]["text"])
+            if state == Qt.Checked:
+                self.address.setText(self.address.text() + ' | ' + self.geocode["metaDataProperty"][
+                    "GeocoderMetaData"]["Address"]["postal_code"])
+        except Exception:
+            self.index.setCheckState(False)
         self.image.setFocus()
 
     def reset(self):
@@ -93,14 +104,15 @@ class Example(QWidget):
                       'geocode': self.text.text(),
                       'format': 'json'
                       }
-            response = requests.get("http://geocode-maps.yandex.ru/1.x/", params=params).json()
-            response = response["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]
-            self.map_x, self.map_y = map(float, response["Point"]["pos"].split())
+            self.geocode = requests.get("http://geocode-maps.yandex.ru/1.x/", params=params).json()
+            self.geocode = self.geocode["response"]["GeoObjectCollection"]["featureMember"][0][
+                "GeoObject"]
+            self.map_x, self.map_y = map(float, self.geocode["Point"]["pos"].split())
             self.params['ll'] = ','.join([str(self.map_x), str(self.map_y)])
             self.params['pt'] = ','.join([str(self.map_x), str(self.map_y), 'flag'])
-            self.address.setText(response["metaDataProperty"]["GeocoderMetaData"]["text"])
+            self.address.setText(self.geocode["metaDataProperty"]["GeocoderMetaData"]["text"])
             if self.index.checkState():
-                self.address.setText(self.address.text() + ' | ' + response["metaDataProperty"][
+                self.address.setText(self.address.text() + ' | ' + self.geocode["metaDataProperty"][
                     "GeocoderMetaData"]["Address"]["postal_code"])
             response = requests.get(self.map_request, params=self.params)
             with open(self.map_file, "wb") as file:
