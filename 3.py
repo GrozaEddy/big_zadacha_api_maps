@@ -48,6 +48,7 @@ class Example(QWidget):
         self.button_search.move(250, 460)
         self.button_search.resize(100, 30)
         self.button_search.clicked.connect(self.search)
+        self.image.setFocus()
 
     def search(self):
         self.button_search.hide()
@@ -62,8 +63,8 @@ class Example(QWidget):
                       }
             response = requests.get("http://geocode-maps.yandex.ru/1.x/", params=params)
             response = response.json()
-            self.map_x, self.map_y = response["response"]["GeoObjectCollection"][
-                "featureMember"][0]["GeoObject"]["Point"]["pos"].split()
+            self.map_x, self.map_y = map(float, response["response"]["GeoObjectCollection"][
+                "featureMember"][0]["GeoObject"]["Point"]["pos"].split())
             self.params['ll'] = ','.join([str(self.map_x), str(self.map_y)])
             self.params['pt'] = ','.join([str(self.map_x), str(self.map_y), 'flag'])
             response = requests.get(self.map_request, params=self.params)
@@ -77,6 +78,7 @@ class Example(QWidget):
         self.text.hide()
         self.button_seek.hide()
         self.button_search.show()
+        self.image.setFocus()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_PageUp and float(self.map_delta) < 0.01:
