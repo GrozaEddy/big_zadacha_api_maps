@@ -24,7 +24,8 @@ class Example(QWidget):
         self.format = 'png'
         self.image = QLabel(self)
         self.text = QLineEdit(self)
-        self.button = QPushButton('Искать', self)
+        self.button_seek = QPushButton('Искать', self)
+        self.button_search = QPushButton('Поиск', self)
         response = requests.get(self.map_request, params=self.params)
         with open(self.map_file + self.format, "wb") as file:
             file.write(response.content)
@@ -39,20 +40,32 @@ class Example(QWidget):
         self.image.setPixmap(self.pixmap)
         self.text.move(50, 460)
         self.text.resize(350, 30)
-        self.button.move(450, 460)
-        self.button.resize(100, 30)
-        self.button.clicked.connect(self.find)
+        self.text.hide()
+        self.button_seek.move(450, 460)
+        self.button_seek.resize(100, 30)
+        self.button_seek.clicked.connect(self.seek)
+        self.button_seek.hide()
+        self.button_search.move(250, 460)
+        self.button_search.resize(100, 30)
+        self.button_search.clicked.connect(self.search)
 
-    def find(self):
-        params = {'apikey': '40d1649f-0493-4b70-98ba-98533de7710b',
-                  'geocode': self.text.text(),
-                  'format': 'json'
-                  }
+    def search(self):
+        self.button_search.hide()
+        self.text.show()
+        self.button_seek.show()
+
+    def seek(self):
         try:
-            response = requests.get("http://geocode-maps.yandex.ru/1.x/", params=params).json()
+            params = {'apikey': '40d1649f-0493-4b70-98ba-98533de7710b',
+                      'geocode': self.text.text(),
+                      'format': 'json'
+                      }
+            response = requests.get("http://geocode-maps.yandex.ru/1.x/", params=params)
+            response = response.json()
             self.map_x, self.map_y = response["response"]["GeoObjectCollection"][
                 "featureMember"][0]["GeoObject"]["Point"]["pos"].split()
             self.params['ll'] = ','.join([str(self.map_x), str(self.map_y)])
+            self.params['pt'] = ','.join([str(self.map_x), str(self.map_y), 'flag'])
             response = requests.get(self.map_request, params=self.params)
             with open(self.map_file, "wb") as file:
                 file.write(response.content)
@@ -60,7 +73,10 @@ class Example(QWidget):
             os.remove(self.map_file)
             self.image.setPixmap(self.pixmap)
         except Exception:
-            self.text.setText('Некорректный адрес')
+            pass
+        self.text.hide()
+        self.button_seek.hide()
+        self.button_search.show()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_PageUp and float(self.map_delta) < 0.01:
