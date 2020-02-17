@@ -26,6 +26,7 @@ class Example(QWidget):
         self.text = QLineEdit(self)
         self.button_seek = QPushButton('Искать', self)
         self.button_search = QPushButton('Поиск', self)
+        self.button_sbros = QPushButton('Сброс', self)
         response = requests.get(self.map_request, params=self.params)
         with open(self.map_file + self.format, "wb") as file:
             file.write(response.content)
@@ -48,10 +49,31 @@ class Example(QWidget):
         self.button_search.move(250, 460)
         self.button_search.resize(100, 30)
         self.button_search.clicked.connect(self.search)
+        self.button_sbros.move(360, 460)
+        self.button_sbros.resize(100, 30)
+        self.button_sbros.clicked.connect(self.sbros)
         self.image.setFocus()
+
+    def sbros(self):
+        self.map_x, self.map_y = 37.530887, 55.703118
+        self.map_delta = '0.002'
+        self.map_type = 'map'
+        self.params = {'ll': ','.join([str(self.map_x), str(self.map_y)]),
+                       'spn': ','.join([self.map_delta, self.map_delta]),
+                       'l': self.map_type
+                       }
+        self.map_file = "map."
+        self.format = 'png'
+        response = requests.get(self.map_request, params=self.params)
+        with open(self.map_file + self.format, "wb") as file:
+            file.write(response.content)
+        self.pixmap = QPixmap(self.map_file + self.format)
+        os.remove(self.map_file + self.format)
+        self.initUI()
 
     def search(self):
         self.button_search.hide()
+        self.button_sbros.hide()
         self.text.show()
         self.button_seek.show()
 
@@ -78,6 +100,7 @@ class Example(QWidget):
         self.text.hide()
         self.button_seek.hide()
         self.button_search.show()
+        self.button_sbros.show()
         self.image.setFocus()
 
     def keyPressEvent(self, event):
