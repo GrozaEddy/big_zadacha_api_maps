@@ -3,10 +3,10 @@ from sys import argv
 
 import requests
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton
+from PyQt5.QtGui import QPixmap, QFont
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QCheckBox
 
-SCREEN_SIZE = [600, 600]
+SCREEN_SIZE = [600, 580]
 
 
 class Example(QWidget):
@@ -24,10 +24,11 @@ class Example(QWidget):
         self.format = 'png'
         self.image = QLabel(self)
         self.text = QLineEdit(self)
-        self.address_1 = QLabel(self)
+        self.address = QLabel(self)
         self.button_seek = QPushButton('Искать', self)
         self.button_search = QPushButton('Поиск', self)
-        self.button_sbros = QPushButton('Сброс', self)
+        self.button_reset = QPushButton('Сброс', self)
+        self.index = QCheckBox('Индекс', self)
         response = requests.get(self.map_request, params=self.params)
         with open(self.map_file + self.format, "wb") as file:
             file.write(response.content)
@@ -43,21 +44,26 @@ class Example(QWidget):
         self.text.move(50, 460)
         self.text.resize(350, 30)
         self.text.hide()
+        self.index.move(270, 460)
+        self.index.resize(100, 30)
         self.button_seek.move(450, 460)
         self.button_seek.resize(100, 30)
         self.button_seek.clicked.connect(self.seek)
         self.button_seek.hide()
-        self.button_search.move(250, 460)
+        self.button_search.move(140, 460)
         self.button_search.resize(100, 30)
         self.button_search.clicked.connect(self.search)
-        self.button_sbros.move(360, 460)
-        self.button_sbros.resize(100, 30)
-        self.button_sbros.clicked.connect(self.sbros)
-        self.address_1.move(50, 530)
-        self.address_1.resize(500, 60)
+        self.button_reset.move(360, 460)
+        self.button_reset.resize(100, 30)
+        self.button_reset.clicked.connect(self.reset)
+        self.address.move(50, 500)
+        self.address.resize(500, 50)
+        font = QFont()
+        font.setPointSize(10)
+        self.address.setFont(font)
         self.image.setFocus()
 
-    def sbros(self):
+    def reset(self):
         self.map_x, self.map_y = 37.530887, 55.703118
         self.map_delta = '0.002'
         self.map_type = 'map'
@@ -65,20 +71,19 @@ class Example(QWidget):
                        'spn': ','.join([self.map_delta, self.map_delta]),
                        'l': self.map_type
                        }
-        self.map_file = "map."
-        self.format = 'png'
+        self.map_file = 'map.png'
         response = requests.get(self.map_request, params=self.params)
-        with open(self.map_file + self.format, "wb") as file:
+        with open(self.map_file, "wb") as file:
             file.write(response.content)
-        self.pixmap = QPixmap(self.map_file + self.format)
-        os.remove(self.map_file + self.format)
-        self.address_1.setText('')
-        self.text.setText('')
+        self.pixmap = QPixmap(self.map_file)
+        os.remove(self.map_file)
+        self.address.setText('')
         self.initUI()
 
     def search(self):
         self.button_search.hide()
-        self.button_sbros.hide()
+        self.button_reset.hide()
+        self.index.hide()
         self.text.show()
         self.button_seek.show()
 
@@ -88,16 +93,15 @@ class Example(QWidget):
                       'geocode': self.text.text(),
                       'format': 'json'
                       }
-            response = requests.get("http://geocode-maps.yandex.ru/1.x/", params=params)
-            response = response.json()
-            self.map_x, self.map_y = map(float, response["response"]["GeoObjectCollection"][
-                "featureMember"][0]["GeoObject"]["Point"]["pos"].split())
+            response = requests.get("http://geocode-maps.yandex.ru/1.x/", params=params).json()
+            response = response["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]
+            self.map_x, self.map_y = map(float, response["Point"]["pos"].split())
             self.params['ll'] = ','.join([str(self.map_x), str(self.map_y)])
             self.params['pt'] = ','.join([str(self.map_x), str(self.map_y), 'flag'])
-            self.address_1.setText(response["response"]["GeoObjectCollection"][
-                                       "featureMember"][0]["GeoObject"]["metaDataProperty"][
-                                       "GeocoderMetaData"]["text"])
-
+            self.address.setText(response["metaDataProperty"]["GeocoderMetaData"]["text"])
+            if self.index.checkState():
+                self.address.setText(self.address.text() + ' | ' + response["metaDataProperty"][
+                    "GeocoderMetaData"]["Address"]["postal_code"])
             response = requests.get(self.map_request, params=self.params)
             with open(self.map_file, "wb") as file:
                 file.write(response.content)
@@ -106,10 +110,12 @@ class Example(QWidget):
             self.image.setPixmap(self.pixmap)
         except Exception:
             pass
+        self.text.clear()
         self.text.hide()
+        self.index.show()
         self.button_seek.hide()
         self.button_search.show()
-        self.button_sbros.show()
+        self.button_reset.show()
         self.image.setFocus()
 
     def keyPressEvent(self, event):
