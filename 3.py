@@ -60,6 +60,7 @@ class Example(QWidget):
         self.button_reset.move(360, 460)
         self.button_reset.resize(100, 30)
         self.button_reset.clicked.connect(self.reset)
+        self.address.setWordWrap(True)
         self.address.move(50, 500)
         self.address.resize(500, 50)
         self.address.setWordWrap(True)
