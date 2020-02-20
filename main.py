@@ -189,8 +189,7 @@ class Example(QWidget):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            self.map_x -= (float(self.map_delta) ** 2 * (300 - event.x()))
-            self.map_y += (float(self.map_delta) ** 2 * (300 - event.y()))
+            self.image.move(300 - event.x(), 300 - event.x())
             self.params['ll'] = ','.join([str(self.map_x), str(self.map_y)])
             self.params['pt'] = ','.join([str(self.map_x), str(self.map_y), 'flag'])
             response = requests.get(self.map_request, params=self.params)
