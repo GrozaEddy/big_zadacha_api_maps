@@ -23,11 +23,11 @@ class Example(QWidget):
         self.map_file = "map."
         self.format = 'png'
         self.image = QLabel(self)
-        self.help = QLabel(self)
-        self.help.move(610, 20)
-        self.help.setText('1 - map\n2 - sat\n3 - skl')
         self.text = QLineEdit(self)
         self.address = QLabel(self)
+        self.button_map = QPushButton('map', self)
+        self.button_sat = QPushButton('sat', self)
+        self.button_skl = QPushButton('skl', self)
         self.button_seek = QPushButton('Искать', self)
         self.button_search = QPushButton('Поиск', self)
         self.button_reset = QPushButton('Сброс', self)
@@ -42,6 +42,15 @@ class Example(QWidget):
     def initUI(self):
         self.setGeometry(100, 100, *SCREEN_SIZE)
         self.setWindowTitle('Отображение карты')
+        self.button_map.clicked.connect(self.change_map)
+        self.button_sat.clicked.connect(self.change_map)
+        self.button_skl.clicked.connect(self.change_map)
+        self.button_map.resize(70, 50)
+        self.button_sat.resize(70, 50)
+        self.button_skl.resize(70, 50)
+        self.button_map.move(620, 30)
+        self.button_sat.move(620, 90)
+        self.button_skl.move(620, 150)
         self.image.move(0, 0)
         self.image.setPixmap(self.pixmap)
         self.text.move(50, 460)
@@ -68,6 +77,26 @@ class Example(QWidget):
         font.setPointSize(10)
         self.address.setFont(font)
         self.image.setFocus()
+
+    def change_map(self):
+        if self.sender().text() == 'map':
+            self.map_type = 'map'
+            self.format = 'png'
+        elif self.sender().text() == 'sat':
+            self.map_type = 'sat'
+            self.format = 'jpg'
+        elif self.sender().text() == 'skl':
+            self.map_type = 'skl'
+            self.format = 'png'
+        self.params['l'] = self.map_type
+        self.params['ll'] = ','.join([str(self.map_x), str(self.map_y)])
+        self.params['spn'] = ','.join([self.map_delta, self.map_delta])
+        response = requests.get(self.map_request, params=self.params)
+        with open(self.map_file, "wb") as file:
+            file.write(response.content)
+        self.pixmap = QPixmap(self.map_file)
+        os.remove(self.map_file)
+        self.image.setPixmap(self.pixmap)
 
     def add_index(self, state):
         try:
@@ -148,15 +177,6 @@ class Example(QWidget):
             self.map_x -= float(self.map_delta)
         elif event.key() == Qt.Key_Right:
             self.map_x += float(self.map_delta)
-        elif event.key() == Qt.Key_1:
-            self.map_type = 'map'
-            self.format = 'png'
-        elif event.key() == Qt.Key_2:
-            self.map_type = 'sat'
-            self.format = 'jpg'
-        elif event.key() == Qt.Key_3:
-            self.map_type = 'skl'
-            self.format = 'png'
         self.params['l'] = self.map_type
         self.params['ll'] = ','.join([str(self.map_x), str(self.map_y)])
         self.params['spn'] = ','.join([self.map_delta, self.map_delta])
