@@ -92,10 +92,10 @@ class Example(QWidget):
         self.params['ll'] = ','.join([str(self.map_x), str(self.map_y)])
         self.params['spn'] = ','.join([self.map_delta, self.map_delta])
         response = requests.get(self.map_request, params=self.params)
-        with open(self.map_file, "wb") as file:
+        with open(self.map_file + self.format, "wb") as file:
             file.write(response.content)
-        self.pixmap = QPixmap(self.map_file)
-        os.remove(self.map_file)
+        self.pixmap = QPixmap(self.map_file + self.format)
+        os.remove(self.map_file + self.format)
         self.image.setPixmap(self.pixmap)
 
     def add_index(self, state):
@@ -116,14 +116,14 @@ class Example(QWidget):
                        'spn': ','.join([self.map_delta, self.map_delta]),
                        'l': self.map_type
                        }
-        self.map_file = 'map.png'
+        self.map_file = 'map'
+        self.format = 'png'
         response = requests.get(self.map_request, params=self.params)
-        with open(self.map_file, "wb") as file:
+        with open(self.map_file + self.format, "wb") as file:
             file.write(response.content)
-        self.pixmap = QPixmap(self.map_file)
-        os.remove(self.map_file)
+        self.pixmap = QPixmap(self.map_file + self.format)
+        os.remove(self.map_file + self.format)
         self.address.setText('')
-        self.initUI()
 
     def search(self):
         self.button_search.hide()
@@ -149,10 +149,17 @@ class Example(QWidget):
                 self.address.setText(self.address.text() + '|' + self.geocode["metaDataProperty"][
                     "GeocoderMetaData"]["Address"]["postal_code"])
                 response = requests.get(self.map_request, params=self.params)
-                with open(self.map_file, "wb") as file:
+                with open(self.map_file + self.format, "wb") as file:
                     file.write(response.content)
-                self.pixmap = QPixmap(self.map_file)
-                os.remove(self.map_file)
+                self.pixmap = QPixmap(self.map_file + self.format)
+                os.remove(self.map_file + self.format)
+                self.image.setPixmap(self.pixmap)
+            else:
+                response = requests.get(self.map_request, params=self.params)
+                with open(self.map_file + self.format, "wb") as file:
+                    file.write(response.content)
+                self.pixmap = QPixmap(self.map_file + self.format)
+                os.remove(self.map_file + self.format)
                 self.image.setPixmap(self.pixmap)
         except Exception:
             pass
@@ -181,15 +188,15 @@ class Example(QWidget):
         self.params['ll'] = ','.join([str(self.map_x), str(self.map_y)])
         self.params['spn'] = ','.join([self.map_delta, self.map_delta])
         response = requests.get(self.map_request, params=self.params)
-        with open(self.map_file, "wb") as file:
+        with open(self.map_file + self.format, "wb") as file:
             file.write(response.content)
-        self.pixmap = QPixmap(self.map_file)
-        os.remove(self.map_file)
+        self.pixmap = QPixmap(self.map_file + self.format)
+        os.remove(self.map_file + self.format)
         self.image.setPixmap(self.pixmap)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            self.image.move(300 - event.x(), 300 - event.x())
+            self.image.move(600 - event.x(), 600 - event.y())
             self.params['ll'] = ','.join([str(self.map_x), str(self.map_y)])
             self.params['pt'] = ','.join([str(self.map_x), str(self.map_y), 'flag'])
             response = requests.get(self.map_request, params=self.params)
