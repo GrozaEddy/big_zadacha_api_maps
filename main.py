@@ -4,7 +4,8 @@ from sys import argv
 import requests
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap, QFont
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QCheckBox
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QCheckBox, \
+    QRadioButton
 
 SCREEN_SIZE = [700, 580]
 
@@ -25,9 +26,9 @@ class Example(QWidget):
         self.image = QLabel(self)
         self.text = QLineEdit(self)
         self.address = QLabel(self)
-        self.button_map = QPushButton('map', self)
-        self.button_sat = QPushButton('sat', self)
-        self.button_skl = QPushButton('skl', self)
+        self.button_map = QRadioButton('map', self)
+        self.button_sat = QRadioButton('sat', self)
+        self.button_skl = QRadioButton('skl', self)
         self.button_seek = QPushButton('Искать', self)
         self.button_search = QPushButton('Поиск', self)
         self.button_reset = QPushButton('Сброс', self)
@@ -79,6 +80,7 @@ class Example(QWidget):
         self.image.setFocus()
 
     def change_map(self):
+        self.image.setFocus()
         if self.sender().text() == 'map':
             self.map_type = 'map'
             self.format = 'png'
@@ -172,18 +174,26 @@ class Example(QWidget):
         self.image.setFocus()
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_PageUp and float(self.map_delta) < 0.01:
-            self.map_delta = str(float(self.map_delta) + 0.001)
-        elif event.key() == Qt.Key_PageDown and float(self.map_delta) > 0.001:
-            self.map_delta = str(float(self.map_delta) - 0.001)
-        elif event.key() == Qt.Key_Up:
+        self.image.setFocus()
+        if event.key() == Qt.Key_Up:
             self.map_y += float(self.map_delta)
+            self.image.setFocus()
         elif event.key() == Qt.Key_Down:
             self.map_y -= float(self.map_delta)
+            self.image.setFocus()
         elif event.key() == Qt.Key_Left:
             self.map_x -= float(self.map_delta)
+            self.image.setFocus()
         elif event.key() == Qt.Key_Right:
             self.map_x += float(self.map_delta)
+            self.image.setFocus()
+        elif event.key() == Qt.Key_PageUp and float(self.map_delta) < 0.01:
+            self.map_delta = str(float(self.map_delta) + 0.001)
+            self.image.setFocus()
+        elif event.key() == Qt.Key_PageDown and float(self.map_delta) > 0.001:
+            self.map_delta = str(float(self.map_delta) - 0.001)
+            self.image.setFocus()
+        self.image.setFocus()
         self.params['l'] = self.map_type
         self.params['ll'] = ','.join([str(self.map_x), str(self.map_y)])
         self.params['spn'] = ','.join([self.map_delta, self.map_delta])
@@ -195,6 +205,7 @@ class Example(QWidget):
         self.image.setPixmap(self.pixmap)
 
     def mousePressEvent(self, event):
+        self.image.setFocus()
         if event.button() == Qt.LeftButton:
             self.image.move(600 - event.x(), 600 - event.y())
             self.params['ll'] = ','.join([str(self.map_x), str(self.map_y)])
@@ -205,6 +216,7 @@ class Example(QWidget):
             self.pixmap = QPixmap(self.map_file + self.format)
             os.remove(self.map_file + self.format)
             self.initUI()
+            self.image.setFocus()
 
 
 if __name__ == '__main__':
