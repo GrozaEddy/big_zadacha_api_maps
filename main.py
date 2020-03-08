@@ -108,7 +108,6 @@ class Example(QWidget):
                     "GeocoderMetaData"]["Address"]["postal_code"])
         except Exception:
             self.index.setCheckState(False)
-        self.image.setFocus()
 
     def reset(self):
         self.map_x, self.map_y = 37.530887, 55.703118
@@ -118,14 +117,16 @@ class Example(QWidget):
                        'spn': ','.join([self.map_delta, self.map_delta]),
                        'l': self.map_type
                        }
-        self.map_file = 'map'
+        self.map_file = 'map.'
         self.format = 'png'
+        self.params['pt'] = ''
         response = requests.get(self.map_request, params=self.params)
         with open(self.map_file + self.format, "wb") as file:
             file.write(response.content)
         self.pixmap = QPixmap(self.map_file + self.format)
         os.remove(self.map_file + self.format)
         self.address.setText('')
+        self.initUI()
 
     def search(self):
         self.button_search.hide()
@@ -203,20 +204,6 @@ class Example(QWidget):
         self.pixmap = QPixmap(self.map_file + self.format)
         os.remove(self.map_file + self.format)
         self.image.setPixmap(self.pixmap)
-
-    def mousePressEvent(self, event):
-        self.image.setFocus()
-        if event.button() == Qt.LeftButton:
-            self.image.move(600 - event.x(), 600 - event.y())
-            self.params['ll'] = ','.join([str(self.map_x), str(self.map_y)])
-            self.params['pt'] = ','.join([str(self.map_x), str(self.map_y), 'flag'])
-            response = requests.get(self.map_request, params=self.params)
-            with open(self.map_file + self.format, "wb") as file:
-                file.write(response.content)
-            self.pixmap = QPixmap(self.map_file + self.format)
-            os.remove(self.map_file + self.format)
-            self.initUI()
-            self.image.setFocus()
 
 
 if __name__ == '__main__':
