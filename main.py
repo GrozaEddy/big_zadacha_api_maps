@@ -141,6 +141,7 @@ class Example(QWidget):
                       'geocode': self.text.text(),
                       'format': 'json'
                       }
+            print(self.text.text())
             self.geocode = requests.get("http://geocode-maps.yandex.ru/1.x/", params=params).json()
             self.geocode = self.geocode["response"]["GeoObjectCollection"]["featureMember"][0][
                 "GeoObject"]
@@ -175,7 +176,6 @@ class Example(QWidget):
         self.image.setFocus()
 
     def keyPressEvent(self, event):
-        self.image.setFocus()
         if event.key() == Qt.Key_Up:
             self.map_y += float(self.map_delta)
             self.image.setFocus()
@@ -194,7 +194,6 @@ class Example(QWidget):
         elif event.key() == Qt.Key_PageDown and float(self.map_delta) > 0.001:
             self.map_delta = str(float(self.map_delta) - 0.001)
             self.image.setFocus()
-        self.image.setFocus()
         self.params['l'] = self.map_type
         self.params['ll'] = ','.join([str(self.map_x), str(self.map_y)])
         self.params['spn'] = ','.join([self.map_delta, self.map_delta])
