@@ -1,212 +1,83 @@
-import os
-from sys import argv
+import sys
 
 import requests
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap, QFont
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QCheckBox, \
-    QRadioButton
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QApplication, QMainWindow
 
-SCREEN_SIZE = [700, 580]
+from mainForm import UiMainWindow
 
 
-class Example(QWidget):
+class Example(QMainWindow, UiMainWindow):
     def __init__(self):
         super().__init__()
-        self.map_request = "http://static-maps.yandex.ru/1.x/"
-        self.map_x, self.map_y = 37.530887, 55.703118
-        self.map_delta = '0.002'
-        self.map_type = 'map'
-        self.params = {'ll': ','.join([str(self.map_x), str(self.map_y)]),
-                       'spn': ','.join([self.map_delta, self.map_delta]),
-                       'l': self.map_type
-                       }
-        self.map_file = "map."
-        self.format = 'png'
-        self.image = QLabel(self)
-        self.text = QLineEdit(self)
-        self.address = QLabel(self)
-        self.button_map = QRadioButton('map', self)
-        self.button_sat = QRadioButton('sat', self)
-        self.button_skl = QRadioButton('skl', self)
-        self.button_seek = QPushButton('Искать', self)
-        self.button_search = QPushButton('Поиск', self)
-        self.button_reset = QPushButton('Сброс', self)
-        self.index = QCheckBox('Индекс', self)
-        response = requests.get(self.map_request, params=self.params)
-        with open(self.map_file + self.format, "wb") as file:
-            file.write(response.content)
-        self.pixmap = QPixmap(self.map_file + self.format)
-        os.remove(self.map_file + self.format)
+        self.setupUi(self)
         self.initUI()
+        self.pushButton.clicked.connect(self.map_chng)
 
     def initUI(self):
-        self.setGeometry(100, 100, *SCREEN_SIZE)
-        self.setWindowTitle('Отображение карты')
-        self.button_map.clicked.connect(self.change_map)
-        self.button_sat.clicked.connect(self.change_map)
-        self.button_skl.clicked.connect(self.change_map)
-        self.button_map.resize(70, 50)
-        self.button_sat.resize(70, 50)
-        self.button_skl.resize(70, 50)
-        self.button_map.move(620, 30)
-        self.button_sat.move(620, 90)
-        self.button_skl.move(620, 150)
-        self.image.move(0, 0)
-        self.image.setPixmap(self.pixmap)
-        self.text.move(50, 460)
-        self.text.resize(350, 30)
-        self.text.hide()
-        self.index.move(270, 460)
-        self.index.resize(100, 30)
-        self.index.stateChanged.connect(self.add_index)
-        self.button_seek.move(450, 460)
-        self.button_seek.resize(100, 30)
-        self.button_seek.clicked.connect(self.seek)
-        self.button_seek.hide()
-        self.button_search.move(140, 460)
-        self.button_search.resize(100, 30)
-        self.button_search.clicked.connect(self.search)
-        self.button_reset.move(360, 460)
-        self.button_reset.resize(100, 30)
-        self.button_reset.clicked.connect(self.reset)
-        self.address.setWordWrap(True)
-        self.address.move(50, 500)
-        self.address.resize(500, 50)
-        self.address.setWordWrap(True)
-        font = QFont()
-        font.setPointSize(10)
-        self.address.setFont(font)
-        self.image.setFocus()
+        self.dest_num = 1
+        self.dest_list = [0.002, 0.005, 0.02, 0.05, 0.1, 0.3, 0.5, 1, 3, 5, 11, 15, 40]
+        self.shir_ch = 37
+        self.dol_ch = 55
+        self.map = 'map'
+        self.run_start()
 
-    def change_map(self):
-        self.image.setFocus()
-        if self.sender().text() == 'map':
-            self.map_type = 'map'
-            self.format = 'png'
-        elif self.sender().text() == 'sat':
-            self.map_type = 'sat'
-            self.format = 'jpg'
-        elif self.sender().text() == 'skl':
-            self.map_type = 'skl'
-            self.format = 'png'
-        self.params['l'] = self.map_type
-        self.params['ll'] = ','.join([str(self.map_x), str(self.map_y)])
-        self.params['spn'] = ','.join([self.map_delta, self.map_delta])
-        response = requests.get(self.map_request, params=self.params)
-        with open(self.map_file + self.format, "wb") as file:
-            file.write(response.content)
-        self.pixmap = QPixmap(self.map_file + self.format)
-        os.remove(self.map_file + self.format)
-        self.image.setPixmap(self.pixmap)
-
-    def add_index(self, state):
-        try:
-            self.address.setText(self.geocode["metaDataProperty"]["GeocoderMetaData"]["text"])
-            if state == Qt.Checked:
-                self.address.setText(self.address.text() + ' | ' + self.geocode["metaDataProperty"][
-                    "GeocoderMetaData"]["Address"]["postal_code"])
-        except Exception:
-            self.index.setCheckState(False)
-
-    def reset(self):
-        self.map_x, self.map_y = 37.530887, 55.703118
-        self.map_delta = '0.002'
-        self.map_type = 'map'
-        self.params = {'ll': ','.join([str(self.map_x), str(self.map_y)]),
-                       'spn': ','.join([self.map_delta, self.map_delta]),
-                       'l': self.map_type
-                       }
-        self.map_file = 'map.'
-        self.format = 'png'
-        self.params['pt'] = ''
-        response = requests.get(self.map_request, params=self.params)
-        with open(self.map_file + self.format, "wb") as file:
-            file.write(response.content)
-        self.pixmap = QPixmap(self.map_file + self.format)
-        os.remove(self.map_file + self.format)
-        self.address.setText('')
-        self.initUI()
-
-    def search(self):
-        self.button_search.hide()
-        self.button_reset.hide()
-        self.index.hide()
-        self.text.show()
-        self.button_seek.show()
-
-    def seek(self):
-        try:
-            params = {'apikey': '40d1649f-0493-4b70-98ba-98533de7710b',
-                      'geocode': self.text.text(),
-                      'format': 'json'
-                      }
-            print(self.text.text())
-            self.geocode = requests.get("http://geocode-maps.yandex.ru/1.x/", params=params).json()
-            self.geocode = self.geocode["response"]["GeoObjectCollection"]["featureMember"][0][
-                "GeoObject"]
-            self.map_x, self.map_y = map(float, self.geocode["Point"]["pos"].split())
-            self.params['ll'] = ','.join([str(self.map_x), str(self.map_y)])
-            self.params['pt'] = ','.join([str(self.map_x), str(self.map_y), 'flag'])
-            self.address.setText(self.geocode["metaDataProperty"]["GeocoderMetaData"]["text"])
-            if self.index.checkState():
-                self.address.setText(self.address.text() + '|' + self.geocode["metaDataProperty"][
-                    "GeocoderMetaData"]["Address"]["postal_code"])
-                response = requests.get(self.map_request, params=self.params)
-                with open(self.map_file + self.format, "wb") as file:
-                    file.write(response.content)
-                self.pixmap = QPixmap(self.map_file + self.format)
-                os.remove(self.map_file + self.format)
-                self.image.setPixmap(self.pixmap)
-            else:
-                response = requests.get(self.map_request, params=self.params)
-                with open(self.map_file + self.format, "wb") as file:
-                    file.write(response.content)
-                self.pixmap = QPixmap(self.map_file + self.format)
-                os.remove(self.map_file + self.format)
-                self.image.setPixmap(self.pixmap)
-        except Exception:
-            pass
-        self.text.clear()
-        self.text.hide()
-        self.index.show()
-        self.button_seek.hide()
-        self.button_search.show()
-        self.button_reset.show()
-        self.image.setFocus()
+    def map_chng(self):
+        if self.map == 'map':
+            self.map = 'sat'
+        elif self.map == 'sat':
+            self.map = 'skl'
+        elif self.map == 'skl':
+            self.map = 'map'
+        self.run_start()
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Up:
-            self.map_y += float(self.map_delta)
-            self.image.setFocus()
+        if event.key() == Qt.Key_PageUp:
+            if self.dest_num < len(self.dest_list) - 1:
+                self.dest_num += 1
+            self.run_start()
+        elif event.key() == Qt.Key_PageDown:
+            if self.dest_num >= 1:
+                self.dest_num -= 1
+            self.run_start()
+        elif event.key() == Qt.Key_Up:
+            self.dol_ch += self.dest_list[self.dest_num]
+            self.run_start()
         elif event.key() == Qt.Key_Down:
-            self.map_y -= float(self.map_delta)
-            self.image.setFocus()
-        elif event.key() == Qt.Key_Left:
-            self.map_x -= float(self.map_delta)
-            self.image.setFocus()
+            self.dol_ch -= self.dest_list[self.dest_num]
+            self.run_start()
         elif event.key() == Qt.Key_Right:
-            self.map_x += float(self.map_delta)
-            self.image.setFocus()
-        elif event.key() == Qt.Key_PageUp and float(self.map_delta) < 0.01:
-            self.map_delta = str(float(self.map_delta) + 0.001)
-            self.image.setFocus()
-        elif event.key() == Qt.Key_PageDown and float(self.map_delta) > 0.001:
-            self.map_delta = str(float(self.map_delta) - 0.001)
-            self.image.setFocus()
-        self.params['l'] = self.map_type
-        self.params['ll'] = ','.join([str(self.map_x), str(self.map_y)])
-        self.params['spn'] = ','.join([self.map_delta, self.map_delta])
-        response = requests.get(self.map_request, params=self.params)
-        with open(self.map_file + self.format, "wb") as file:
-            file.write(response.content)
-        self.pixmap = QPixmap(self.map_file + self.format)
-        os.remove(self.map_file + self.format)
-        self.image.setPixmap(self.pixmap)
+            self.shir_ch += self.dest_list[self.dest_num]
+            self.run_start()
+        elif event.key() == Qt.Key_Left:
+            self.shir_ch -= self.dest_list[self.dest_num]
+            self.run_start()
+
+    def run_start(self):
+        try:
+            self.our_map.setFocus()
+            dest = self.dest_list[self.dest_num]
+            map_request = f"http://static-maps.yandex.ru/1.x/?" \
+                          f"ll={self.shir_ch},{self.dol_ch}&spn" \
+                          f"={dest},{dest}&l={self.map}&size=650,450"
+            response = requests.get(map_request)
+            if self.map == 'sat':
+                self.map_file = "map.jpg"
+            else:
+                self.map_file = "map.png"
+            with open(self.map_file, "wb") as file:
+                if 'error' in str(response.content):
+                    return
+                file.write(response.content)
+            self.pixmap = QPixmap(self.map_file)
+            self.our_map.setPixmap(self.pixmap)
+        except Exception:
+            return
 
 
 if __name__ == '__main__':
-    app = QApplication(argv)
+    app = QApplication(sys.argv)
     ex = Example()
     ex.show()
-    exit(app.exec())
+    sys.exit(app.exec())
